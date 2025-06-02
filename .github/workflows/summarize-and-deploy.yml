@@ -3,7 +3,7 @@ name: Deploy Hugo site to Pages
 on: push
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -28,17 +28,19 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
-      - name: Summarize PDFs
+      - name: Summarize PDFs and generate posts
         run: |
           python summarizer/main.py pdfs/ \
             --api_key "${{ secrets.OPENAI_TOKEN }}" \
             --verbose
 
-      - name: Upload generated posts
-        uses: actions/upload-artifact@v4
-        with:
-          name: hugo-posts
-          path: content/posts/
+      - name: Commit and push new posts
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add content/posts/*.md || echo "No new posts"
+          git diff --cached --quiet || git commit -m "Add new summarized posts from PDFs"
+          git push origin HEAD:${{ github.ref }}
 
   build:
     runs-on: ubuntu-latest
@@ -48,18 +50,6 @@ jobs:
       HUGO_ENVIRONMENT: production
       TZ: America/Los_Angeles
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          fetch-depth: 0
-
-      - name: Download post artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: hugo-posts
-          path: content/posts/
-
       - name: Install Hugo CLI
         run: |
           wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb \
@@ -67,6 +57,12 @@ jobs:
 
       - name: Install Dart Sass
         run: sudo snap install dart-sass
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
 
       - name: Setup Pages
         id: pages
@@ -79,10 +75,10 @@ jobs:
         id: cache-restore
         uses: actions/cache/restore@v4
         with:
-          path: ${{ runner.temp }}/hugo_cache
+          path: |
+            ${{ runner.temp }}/hugo_cache
           key: hugo-${{ github.run_id }}
-          restore-keys: |
-            hugo-
+          restore-keys: hugo-
 
       - name: Configure Git
         run: git config core.quotepath false
@@ -99,7 +95,8 @@ jobs:
         id: cache-save
         uses: actions/cache/save@v4
         with:
-          path: ${{ runner.temp }}/hugo_cache
+          path: |
+            ${{ runner.temp }}/hugo_cache
           key: ${{ steps.cache-restore.outputs.cache-primary-key }}
 
       - name: Upload artifact
