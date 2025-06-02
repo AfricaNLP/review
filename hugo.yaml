@@ -18,6 +18,10 @@ minify:
   disableXML: true
   # minifyOutput: true
 
+caches:
+  images:
+    dir: :cacheDir/images
+
 pagination:
   disableAliases: false
   pagerSize: 5
