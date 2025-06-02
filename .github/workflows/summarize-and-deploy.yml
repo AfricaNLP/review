@@ -39,10 +39,10 @@ jobs:
 
       - name: Summarize PDFs
         run: |
-          python summarizer/run.py pdfs/ \
+          python summarizer/main.py pdfs/ \
             --api_key "${{ secrets.OPENAI_TOKEN }}" \
             --verbose
-            
+
   build:
     runs-on: ubuntu-latest
     env:
