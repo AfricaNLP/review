@@ -1,6 +1,7 @@
 import os
 import logging
 import argparse
+from pathlib import Path
 from datetime import datetime
 from summarizer import PDFSummarizer
 
@@ -72,6 +73,9 @@ def main():
   if not pdf_files:
     logging.warning(f"No PDF files found in {args.pdf_dir}")
     return
+  
+  output_dir = Path(args.output_dir).resolve()
+  output_dir.mkdir(parents=True, exist_ok=True)
 
   for pdf_file in pdf_files:
     pdf_path = os.path.join(args.pdf_dir, pdf_file)
