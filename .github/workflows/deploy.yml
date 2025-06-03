@@ -28,7 +28,7 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
-      - name: Summarize PDFs and generate posts
+      - name: Fetch new posts from arXiv
         run: |
           python scripts/fetch.py --verbose
 
@@ -36,7 +36,7 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git add content/posts/*.md || echo "No new posts"
+          git add content/**/*.md || echo "No new posts"
           git diff --cached --quiet || git commit -m "Add new extracted posts from arXiv"
           git push origin HEAD:${{ github.ref }}
 
@@ -66,7 +66,7 @@ jobs:
   #       run: |
   #         git config --global user.name "github-actions"
   #         git config --global user.email "github-actions@github.com"
-  #         git add content/posts/*.md || echo "No new posts"
+  #         git add content/**/*.md || echo "No new posts"
   #         git diff --cached --quiet || git commit -m "Add new summarized posts from PDFs"
   #         git push origin HEAD:${{ github.ref }}
 
