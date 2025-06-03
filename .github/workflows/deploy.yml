@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  summarize:
+  fetch:
     runs-on: ubuntu-latest
     env:
       TZ: America/Los_Angeles
@@ -30,17 +30,45 @@ jobs:
 
       - name: Summarize PDFs and generate posts
         run: |
-          python summarizer/main.py pdfs/ \
-            --api_key "${{ secrets.OPENAI_TOKEN }}" \
-            --verbose
+          python scripts/fetch.py --verbose
 
       - name: Commit and push new posts
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add content/posts/*.md || echo "No new posts"
-          git diff --cached --quiet || git commit -m "Add new summarized posts from PDFs"
+          git diff --cached --quiet || git commit -m "Add new extracted posts from arXiv"
           git push origin HEAD:${{ github.ref }}
+
+  # summarize:
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     TZ: America/Los_Angeles
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: "3.11"
+
+  #     - name: Install Python dependencies
+  #       run: pip install -r requirements.txt
+
+  #     - name: Summarize PDFs and generate posts
+  #       run: |
+  #         python scripts/summarize.py pdfs/ \
+  #           --api_key "${{ secrets.OPENAI_TOKEN }}" \
+  #           --verbose
+
+  #     - name: Commit and push new posts
+  #       run: |
+  #         git config --global user.name "github-actions"
+  #         git config --global user.email "github-actions@github.com"
+  #         git add content/posts/*.md || echo "No new posts"
+  #         git diff --cached --quiet || git commit -m "Add new summarized posts from PDFs"
+  #         git push origin HEAD:${{ github.ref }}
 
   build:
     runs-on: ubuntu-latest
