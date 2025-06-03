@@ -36,7 +36,8 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git add content/**/*.md || echo "No new posts"
+          git add content/posts/*.md || echo "No new posts"
+          git add fetched_papers.json || echo "No new fetched papers"
           git diff --cached --quiet || git commit -m "Add new extracted posts from arXiv"
           git push origin HEAD:${{ github.ref }}
 
