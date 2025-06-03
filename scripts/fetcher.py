@@ -78,17 +78,7 @@ class ArxivFetcher:
         for topic, new_entries in new_data.items():
             slug = topic.lower().replace(" ", "-")
             filepath = os.path.join(self.output_dir, f"{slug}.md")
-            frontmatter = f"""---
-title: "{topic.title()}"
-date: {datetime.now().strftime("%Y-%m-%d")}
-type: "topic"
-layout: "single"
-draft: false
----
-
-# {topic.title()}
-
-"""
+            frontmatter = ''
 
             if os.path.exists(filepath):
                 with open(filepath, "r", encoding="utf-8") as f:
