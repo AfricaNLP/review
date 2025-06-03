@@ -73,21 +73,41 @@ class ArxivFetcher:
                 self.fetched_ids.add(arxiv_id)
                 new_data[topic].append(self.format_paper_entry(entry))
 
-        # Save cache
         self.save_cache()
 
-        # Write markdown pages
         for topic, new_entries in new_data.items():
-            filename = os.path.join(self.output_dir, f"{topic.lower().replace(' ', '-')}.md")
-            if os.path.exists(filename):
-                with open(filename, "r", encoding="utf-8") as f:
-                    old_content = f.read()
+            slug = topic.lower().replace(" ", "-")
+            filepath = os.path.join(self.output_dir, f"{slug}.md")
+            frontmatter = f"""---
+title: "{topic.title()}"
+date: {datetime.now().strftime("%Y-%m-%d")}
+type: "topic"
+layout: "single"
+draft: false
+---
+
+# {topic.title()}
+
+"""
+
+            if os.path.exists(filepath):
+                with open(filepath, "r", encoding="utf-8") as f:
+                    content = f.read()
+                # Keep the existing frontmatter + title, insert new entries after it
+                parts = content.split("#", 1)
+                if len(parts) > 1:
+                    header = parts[0] + "#" + parts[1].split('\n', 1)[0] + "\n\n"
+                    old_entries = content[len(header):]
+                else:
+                    header = frontmatter
+                    old_entries = ""
             else:
-                old_content = f"# {topic.title()}\n\n"
+                header = frontmatter
+                old_entries = ""
 
-            # Insert new entries after the title
-            updated_content = old_content.split('\n', 1)[0] + "\n\n" + "\n".join(new_entries) + "\n\n" + old_content.split('\n', 1)[-1]
-            with open(filename, "w", encoding="utf-8") as f:
-                f.write(updated_content)
+            new_markdown = header + "\n".join(new_entries) + "\n\n" + old_entries
 
-            print(f"Updated: {filename}")
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(new_markdown)
+
+            print(f"Updated: {filepath}")
