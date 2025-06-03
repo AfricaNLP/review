@@ -12,7 +12,7 @@ buildFuture: false
 buildExpired: false
 enableEmoji: true
 pygmentsUseClasses: true
-mainsections: ["machine translation", "sentiment analysis", "llm evaluation", "posts", "papermod"]
+mainsections: ["posts", "papermod"]
 
 minify:
   disableXML: true
