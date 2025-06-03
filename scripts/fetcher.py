@@ -21,7 +21,7 @@ class ArxivFetcher:
 
   def save_cache(self):
     with open(self.cache_file, 'w') as f:
-      json.dump(list(self.fetched_ids), f, indent=2)
+      json.dump(sorted(self.fetched_ids), f, indent=2)
 
   def build_query_url(self, search_term):
     base_url = "http://export.arxiv.org/api/query?"
@@ -49,33 +49,37 @@ class ArxivFetcher:
       for entry in feed.entries:
         arxiv_id = entry.id.split('/abs/')[-1]
         if arxiv_id in self.fetched_ids:
+          print(f"Skipping already fetched ID: {arxiv_id}")
           continue
 
-        self.fetched_ids.add(arxiv_id)
+        try:
+          title = entry.title.strip()
+          authors = ', '.join(author.name for author in entry.authors)
+          summary = entry.summary.strip().replace('\n', ' ')
+          pdf_link = next((link.href for link in entry.links if link.type == "application/pdf"), "")
 
-        title = entry.title.strip()
-        authors = ', '.join(author.name for author in entry.authors)
-        summary = entry.summary.strip().replace('\n', ' ')
-        pdf_link = next((link.href for link in entry.links if link.type == "application/pdf"), "")
-        
-        published = datetime.strptime(
-          entry.published, "%Y-%m-%dT%H:%M:%SZ"
-        ).replace(
-          tzinfo=timezone.utc
-        ).strftime("%B %d, %Y at %I:%M %p UTC")
+          published = datetime.strptime(
+            entry.published, "%Y-%m-%dT%H:%M:%SZ"
+          ).replace(
+            tzinfo=timezone.utc
+          ).strftime("%B %d, %Y at %I:%M %p UTC")
 
-        filename = f"{topic_dir}/{arxiv_id.replace('/', '-')}.md"
-        with open(filename, "w", encoding="utf-8") as f:
-          f.write(f"---\n")
-          f.write(f"title: \"{title}\"\n")
-          f.write(f"date: {published}\n")
-          f.write(f"authors: \"{authors}\"\n")
-          f.write(f"arxiv_id: \"{arxiv_id}\"\n")
-          f.write(f"pdf: \"{pdf_link}\"\n")
-          f.write(f"topic: \"{topic}\"\n")
-          f.write(f"---\n\n")
-          f.write(f"{summary}\n")
+          filename = f"{topic_dir}/{arxiv_id.replace('/', '-')}.md"
+          with open(filename, "w", encoding="utf-8") as f:
+            f.write(f"---\n")
+            f.write(f"title: \"{title}\"\n")
+            f.write(f"date: {published}\n")
+            f.write(f"authors: \"{authors}\"\n")
+            f.write(f"arxiv_id: \"{arxiv_id}\"\n")
+            f.write(f"pdf: \"{pdf_link}\"\n")
+            f.write(f"topic: \"{topic}\"\n")
+            f.write(f"---\n\n")
+            f.write(f"{summary}\n")
 
-        print(f"Saved: {filename}")
+          self.fetched_ids.add(arxiv_id)
+          print(f"Saved: {filename}")
+
+        except Exception as e:
+          print(f"Error processing {arxiv_id}: {e}")
 
     self.save_cache()
