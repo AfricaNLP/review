@@ -3,7 +3,7 @@ import json
 import feedparser
 import urllib.parse as up
 import urllib.request as ur
-from datetime import datetime, timezone
+# from datetime import datetime, timezone
 
 class ArxivFetcher:
   def __init__(self, topics, output_dir="content", cache_file="fetched_papers.json", max_results=None):
@@ -58,17 +58,17 @@ class ArxivFetcher:
           summary = entry.summary.strip().replace('\n', ' ')
           pdf_link = next((link.href for link in entry.links if link.type == "application/pdf"), "")
 
-          published = datetime.strptime(
-            entry.published, "%Y-%m-%dT%H:%M:%SZ"
-          ).replace(
-            tzinfo=timezone.utc
-          ).strftime("%B %d, %Y at %I:%M %p UTC")
+          # published = datetime.strptime(
+          #   entry.published, "%Y-%m-%dT%H:%M:%SZ"
+          # ).replace(
+          #   tzinfo=timezone.utc
+          # ).strftime("%B %d, %Y at %I:%M %p UTC")
 
           filename = f"{topic_dir}/{arxiv_id.replace('/', '-')}.md"
           with open(filename, "w", encoding="utf-8") as f:
             f.write(f"---\n")
             f.write(f"title: \"{title}\"\n")
-            f.write(f"date: {published}\n")
+            f.write(f"date: {entry.published}\n")
             f.write(f"authors: \"{authors}\"\n")
             f.write(f"arxiv_id: \"{arxiv_id}\"\n")
             f.write(f"pdf: \"{pdf_link}\"\n")
